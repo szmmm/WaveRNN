@@ -132,11 +132,19 @@ if __name__ == "__main__":
                   ('Target Samples', target if batched else 'N/A'),
                   ('Overlap Samples', overlap if batched else 'N/A')])
 
+    if gta:
+        save_path = paths.voc_output / 'gta'
+    else:
+        save_path = paths.voc_output / 'natural'
+    save_path.mkdir(parents=False, exist_ok=True)
+    print(f'Saving to {save_path}')
+    # import pdb; pdb.set_trace()
+
     if file:
         file = Path(file).expanduser()
-        gen_from_file(model, file, paths.voc_output, batched, target, overlap)
+        gen_from_file(model, file, save_path, batched, target, overlap)
     else:
         _, test_set = get_vocoder_datasets(paths.data, 1, gta)
-        gen_testset(model, test_set, samples, batched, target, overlap, paths.voc_output)
+        gen_testset(model, test_set, samples, batched, target, overlap, save_path)
 
     print('\n\nExiting...\n')

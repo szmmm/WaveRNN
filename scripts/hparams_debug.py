@@ -7,8 +7,9 @@ data_path = 'data/'
 
 # model ids are separate - that way you can use a new tts with an old wavernn and vice versa
 # NB: expect undefined behaviour if models were trained on different DSP settings
-voc_model_id = 'ljspeech_mol'
-tts_model_id = 'ljspeech_lsa_smooth_attention'
+exp_id = 'debug'
+voc_model_id = exp_id + ''
+tts_model_id = exp_id + ''
 
 # set this to True if you are only interested in WaveRNN
 ignore_tts = False
@@ -53,6 +54,7 @@ voc_test_samples = 50               # How many unseen samples to put aside for t
 voc_pad = 2                         # this will pad the input so that the resnet can 'see' wider than input length
 voc_seq_len = hop_length * 5        # must be a multiple of hop_length
 voc_clip_grad_norm = 4              # set to None if no gradient clipping needed
+voc_init_weights_path = '/home/dawna/tts/qd212/models/WaveRNN/checkpoints/ljspeech_mol_asnv.wavernn/wave_step1000K_weights.pyt' # initial weights, usually from a pretrained model
 
 # Generating / Synthesizing
 voc_gen_batched = True              # very fast (realtime+) single utterance batched generation
@@ -90,6 +92,7 @@ tts_max_mel_len = 1250              # if you have a couple of extremely long spe
 tts_bin_lengths = True              # bins the spectrogram lengths before sampling in data loader - speeds up training
 tts_clip_grad_norm = 1.0            # clips the gradient norm to prevent explosion - set to None if not needed
 tts_checkpoint_every = 2_000        # checkpoints the model every X steps
+tts_init_weights_path = None # initial weights, usually from a pretrained model
 # TODO: tts_phoneme_prob = 0.0              # [0 <-> 1] probability for feeding model phonemes vrs graphemes
 
 

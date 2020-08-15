@@ -77,7 +77,7 @@ def save_checkpoint(checkpoint_type: str, paths: Paths, model, optimizer, *,
 
 
 def restore_checkpoint(checkpoint_type: str, paths: Paths, model, optimizer, *,
-        name=None, create_if_missing=False):
+        name=None, create_if_missing=False, init_weights_path=None):
     """Restores from a training session saved to disk.
 
     NOTE: The optimizer's state is placed on the same device as it's model
@@ -123,6 +123,10 @@ def restore_checkpoint(checkpoint_type: str, paths: Paths, model, optimizer, *,
         print(f'Loading {s} optimizer state: {path_dict["o"]}')
         optimizer.load_state_dict(torch.load(path_dict['o']))
     elif create_if_missing:
+        if init_weights_path is not None:
+            model.load(init_weights_path)
+            model.step *= 0
+            print(f'Initializing with weights at: {init_weights_path}')
         save_checkpoint(checkpoint_type, paths, model, optimizer, name=name, is_silent=False)
     else:
         raise FileNotFoundError(f'The {s} checkpoint could not be found!')

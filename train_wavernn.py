@@ -68,7 +68,14 @@ def main():
     assert np.cumprod(hp.voc_upsample_factors)[-1] == hp.hop_length
 
     optimizer = optim.Adam(voc_model.parameters())
-    restore_checkpoint('voc', paths, voc_model, optimizer, create_if_missing=True)
+
+    # for idx, key in enumerate(voc_model.state_dict().keys()):
+    #   print(voc_model.state_dict()[key])
+    #   if idx>1: break
+    # print(voc_model.get_step())
+    # import pdb; pdb.set_trace()
+
+    restore_checkpoint('voc', paths, voc_model, optimizer, create_if_missing=True, init_weights_path=hp.voc_init_weights_path)
 
     train_set, test_set = get_vocoder_datasets(paths.data, batch_size, train_gta)
 
