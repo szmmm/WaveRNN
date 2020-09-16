@@ -1,3 +1,9 @@
+# data
+data/
+checkpoints/
+model_outputs/
+quick_start/
+
 # IDE files
 .idea
 .vscode

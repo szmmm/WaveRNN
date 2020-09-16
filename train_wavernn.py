@@ -77,7 +77,7 @@ def main():
 
     restore_checkpoint('voc', paths, voc_model, optimizer, create_if_missing=True, init_weights_path=hp.voc_init_weights_path)
 
-    train_set, test_set = get_vocoder_datasets(paths.data, batch_size, train_gta)
+    train_set, test_set = get_vocoder_datasets(paths.data, batch_size, train_gta, hp.tts_model_id)
 
     total_steps = 10_000_000 if force_train else hp.voc_total_steps
 

@@ -12,6 +12,7 @@ class Paths:
         self.quant = self.data/'quant'
         self.mel = self.data/'mel'
         self.gta = self.data/'gta'
+        self.gta_model = self.data/f'gta_{tts_id}'
 
         # WaveRNN/Vocoder Paths
         self.voc_checkpoints = self.base/'checkpoints'/f'{voc_id}.wavernn'

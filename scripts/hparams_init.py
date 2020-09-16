@@ -9,7 +9,8 @@ data_path = 'data/'
 # NB: expect undefined behaviour if models were trained on different DSP settings
 exp_id = 'lj_pretrain'
 voc_model_id = exp_id + ''
-tts_model_id = exp_id + ''
+# tts_model_id = exp_id + ''
+tts_model_id = ''
 
 # set this to True if you are only interested in WaveRNN
 ignore_tts = False

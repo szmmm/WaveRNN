@@ -16,9 +16,12 @@ from pathlib import Path
 
 
 class VocoderDataset(Dataset):
-    def __init__(self, path: Path, dataset_ids, train_gta=False):
+    def __init__(self, path: Path, dataset_ids, train_gta=False, voc_model_id=''):
         self.metadata = dataset_ids
         self.mel_path = path/'gta' if train_gta else path/'mel'
+        if voc_model_id is not '':
+            self.mel_path = path/f'gta_{voc_model_id}' # train NV for a sepcific Taco
+            print(f'using conditioning vectors at {self.mel_path}')
         self.quant_path = path/'quant'
 
 
@@ -32,7 +35,7 @@ class VocoderDataset(Dataset):
         return len(self.metadata)
 
 
-def get_vocoder_datasets(path: Path, batch_size, train_gta):
+def get_vocoder_datasets(path: Path, batch_size, train_gta, voc_model_id=''):
 
     with open(path/'dataset.pkl', 'rb') as f:
         dataset = pickle.load(f)
@@ -45,8 +48,8 @@ def get_vocoder_datasets(path: Path, batch_size, train_gta):
     test_ids = dataset_ids[-hp.voc_test_samples:]
     train_ids = dataset_ids[:-hp.voc_test_samples]
 
-    train_dataset = VocoderDataset(path, train_ids, train_gta)
-    test_dataset = VocoderDataset(path, test_ids, train_gta)
+    train_dataset = VocoderDataset(path, train_ids, train_gta, voc_model_id)
+    test_dataset = VocoderDataset(path, test_ids, train_gta, voc_model_id)
 
     train_set = DataLoader(train_dataset,
                            collate_fn=collate_vocoder,

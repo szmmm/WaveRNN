@@ -101,10 +101,10 @@ def main():
         print('To continue training increase tts_total_steps in hparams.py or use --force_train\n')
 
 
-    print('Creating Ground Truth Aligned Dataset...\n')
+    print(f'Creating Ground Truth Aligned Dataset at {paths.gta_model}...\n')
 
     train_set, attn_example = get_tts_datasets(paths.data, 8, model.r)
-    create_gta_features(model, train_set, paths.gta)
+    create_gta_features(model, train_set, paths.gta_model)
 
     print('\n\nYou can now train WaveRNN on GTA features - use python train_wavernn.py --gta\n')
 
@@ -176,6 +176,7 @@ def tts_train_loop(paths: Paths, model: Tacotron, optimizer, train_set, lr, trai
 
 
 def create_gta_features(model: Tacotron, train_set, save_path: Path):
+    save_path.mkdir(parents=False, exist_ok=True)
     device = next(model.parameters()).device  # use same device as model parameters
 
     iters = len(train_set)
