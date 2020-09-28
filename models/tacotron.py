@@ -227,7 +227,7 @@ class Decoder(nn.Module):
         return prev * mask + current * (1 - mask)
 
     def forward(self, encoder_seq, encoder_seq_proj, prenet_in,
-                hidden_states, cell_states, context_vec, t):
+                hidden_states, cell_states, context_vec, t, attn_ref=None):
 
         # Need this for reshaping mels
         batch_size = encoder_seq.size(0)
@@ -247,7 +247,14 @@ class Decoder(nn.Module):
         scores = self.attn_net(encoder_seq_proj, attn_hidden, t)
 
         # Dot product to create the context vector
-        context_vec = scores @ encoder_seq
+        if attn_ref is None:
+            context_vec = scores @ encoder_seq
+        else:
+            # import pdb; pdb.set_trace()
+            # print(attn_ref.size())
+            # print(scores.size())
+            # pdb.set_trace()
+            context_vec = attn_ref @ encoder_seq # attention forcing
         context_vec = context_vec.squeeze(1)
 
         # Concat Attention RNN output w. Context Vector & project
@@ -281,7 +288,7 @@ class Decoder(nn.Module):
 
 class Tacotron(nn.Module):
     def __init__(self, embed_dims, num_chars, encoder_dims, decoder_dims, n_mels, fft_bins, postnet_dims,
-                 encoder_K, lstm_dims, postnet_K, num_highways, dropout, stop_threshold):
+                 encoder_K, lstm_dims, postnet_K, num_highways, dropout, stop_threshold, mode='teacher_forcing'):
         super().__init__()
         self.n_mels = n_mels
         self.lstm_dims = lstm_dims
@@ -299,6 +306,8 @@ class Tacotron(nn.Module):
         self.register_buffer('step', torch.zeros(1, dtype=torch.long))
         self.register_buffer('stop_threshold', torch.tensor(stop_threshold, dtype=torch.float32))
 
+        self.mode = mode
+
     @property
     def r(self):
         return self.decoder.r.item()
@@ -307,7 +316,7 @@ class Tacotron(nn.Module):
     def r(self, value):
         self.decoder.r = self.decoder.r.new_tensor(value, requires_grad=False)
 
-    def forward(self, x, m, generate_gta=False):
+    def forward(self, x, m, generate_gta=False, attn_ref=None):
         device = next(self.parameters()).device  # use same device as parameters
 
         self.step += 1
@@ -341,17 +350,19 @@ class Tacotron(nn.Module):
         encoder_seq = self.encoder(x)
         encoder_seq_proj = self.encoder_proj(encoder_seq)
 
-        # Need a couple of lists for outputs
-        mel_outputs, attn_scores = [], []
+        mel_outputs, attn_scores = self.decoder_loop(steps, m, go_frame, encoder_seq, encoder_seq_proj, hidden_states, cell_states, context_vec, attn_ref=attn_ref)
 
-        # Run the decoder loop
-        for t in range(0, steps, self.r):
-            prenet_in = m[:, :, t - 1] if t > 0 else go_frame
-            mel_frames, scores, hidden_states, cell_states, context_vec = \
-                self.decoder(encoder_seq, encoder_seq_proj, prenet_in,
-                             hidden_states, cell_states, context_vec, t)
-            mel_outputs.append(mel_frames)
-            attn_scores.append(scores)
+        # # Need a couple of lists for outputs
+        # mel_outputs, attn_scores = [], []
+
+        # # Run the decoder loop
+        # for t in range(0, steps, self.r):
+        #     prenet_in = m[:, :, t - 1] if t > 0 else go_frame
+        #     mel_frames, scores, hidden_states, cell_states, context_vec = \
+        #         self.decoder(encoder_seq, encoder_seq_proj, prenet_in,
+        #                      hidden_states, cell_states, context_vec, t)
+        #     mel_outputs.append(mel_frames)
+        #     attn_scores.append(scores)
 
         # Concat the mel outputs into sequence
         mel_outputs = torch.cat(mel_outputs, dim=2)
@@ -366,6 +377,45 @@ class Tacotron(nn.Module):
         # attn_scores = attn_scores.cpu().data.numpy()
 
         return mel_outputs, linear, attn_scores
+
+    def decoder_loop(self, steps, m, go_frame, encoder_seq, encoder_seq_proj, hidden_states, cell_states, context_vec, attn_ref=None):
+        # Need a couple of lists for outputs
+        mel_outputs, attn_scores = [], []
+
+        # Run the decoder loop
+        if self.mode=='teacher_forcing':
+            for t in range(0, steps, self.r):
+                prenet_in = m[:, :, t - 1] if t > 0 else go_frame
+                mel_frames, scores, hidden_states, cell_states, context_vec = \
+                    self.decoder(encoder_seq, encoder_seq_proj, prenet_in,
+                                 hidden_states, cell_states, context_vec, t)
+                mel_outputs.append(mel_frames)
+                attn_scores.append(scores)
+        elif self.mode in ['attention_forcing_online', 'attention_forcing_offline']:
+            assert attn_ref is not None, 'in attention_forcing mode, but attn_ref is None'
+            for t in range(0, steps, self.r):
+                # print(m.size(), attn_ref.size())
+                # print(t, steps, self.r)
+                prenet_in = mel_outputs[-1][:, :, -1] if t > 0 else go_frame
+                mel_frames, scores, hidden_states, cell_states, context_vec = \
+                    self.decoder(encoder_seq, encoder_seq_proj, prenet_in,
+                                 hidden_states, cell_states, context_vec, t, attn_ref=attn_ref[:, t//self.r,:].unsqueeze(1))
+                    # self.decoder(encoder_seq, encoder_seq_proj, prenet_in,
+                    #              hidden_states, cell_states, context_vec, t, attn_ref=attn_ref[:, t//2,:].unsqueeze(1))
+                mel_outputs.append(mel_frames)
+                attn_scores.append(scores)
+        elif self.mode=='free_running':
+            for t in range(0, steps, self.r):
+                prenet_in = mel_outputs[-1][:, :, -1] if t > 0 else go_frame
+                mel_frames, scores, hidden_states, cell_states, context_vec = \
+                self.decoder(encoder_seq, encoder_seq_proj, prenet_in,
+                             hidden_states, cell_states, context_vec, t)
+                mel_outputs.append(mel_frames)
+                attn_scores.append(scores)
+                # Stop the loop if silent frames present
+                if (mel_frames < self.stop_threshold).all() and t > 10: break
+
+        return mel_outputs, attn_scores
 
     def generate(self, x, steps=2000):
         self.eval()

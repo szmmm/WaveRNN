@@ -9,6 +9,8 @@ from utils.text import text_to_sequence
 from utils.paths import Paths
 from pathlib import Path
 
+import warnings
+
 
 ###################################################################################
 # WaveRNN/Vocoder Dataset #########################################################
@@ -19,7 +21,7 @@ class VocoderDataset(Dataset):
     def __init__(self, path: Path, dataset_ids, train_gta=False, voc_model_id=''):
         self.metadata = dataset_ids
         self.mel_path = path/'gta' if train_gta else path/'mel'
-        if voc_model_id is not '':
+        if train_gta and (voc_model_id != ''):
             self.mel_path = path/f'gta_{voc_model_id}' # train NV for a sepcific Taco
             print(f'using conditioning vectors at {self.mel_path}')
         self.quant_path = path/'quant'
@@ -152,7 +154,11 @@ class TTSDataset(Dataset):
         x = text_to_sequence(self.text_dict[item_id], hp.tts_cleaner_names)
         mel = np.load(self.path/'mel'/f'{item_id}.npy')
         mel_len = mel.shape[-1]
-        return x, mel, item_id, mel_len
+        if hp.mode in ['teacher_forcing', 'attention_forcing_online']:
+            return x, mel, item_id, mel_len
+        elif hp.mode == 'attention_forcing_offline':
+            attn_ref = np.load(self.path/hp.attn_ref_path/f'{item_id}.npy')
+            return x, mel, item_id, mel_len, attn_ref
 
     def __len__(self):
         return len(self.metadata)
@@ -164,6 +170,30 @@ def pad1d(x, max_len):
 
 def pad2d(x, max_len):
     return np.pad(x, ((0, 0), (0, max_len - x.shape[-1])), mode='constant')
+
+
+def pad_cut_attn(attn, max_x_len, max_attn_len):
+    l_a, l_x = attn.shape
+    attn_pad = attn
+
+    if max_x_len - l_x < 0:
+        if max_x_len < 0.5*l_x: warnings.warn(f'max_x_len {max_x_len} < 0.5 * l_x {l_x}')
+        # print(max_x_len, attn.shape)
+        tmp = attn_pad[:, -(1+l_x-max_x_len):-1].sum(axis=1, keepdims=True) / max_x_len
+        attn_pad = np.delete(attn, np.s_[-(1+l_x-max_x_len):-1], axis = 1)
+        attn_pad += tmp
+    elif max_x_len - l_x > 0:
+        tmp = np.zeros([max_x_len - l_x, 1])
+        attn_pad = np.insert(attn,-1,tmp, axis = 1)
+        
+    if max_attn_len - l_a < 0:
+        if max_attn_len < 0.5*l_a: warnings.warn(f'max_attn_len {max_attn_len} < 0.5 * l_a {l_a}')
+        attn_pad = attn_pad[:max_attn_len]
+    elif max_attn_len - l_a > 0:
+        tmp = np.tile(attn_pad[-1,:], (max_attn_len - l_a,1))
+        attn_pad = np.concatenate([attn_pad, tmp], axis = 0)
+
+    return attn_pad
 
 
 def collate_tts(batch, r):
@@ -190,7 +220,15 @@ def collate_tts(batch, r):
 
     # scale spectrograms to -4 <--> 4
     mel = (mel * 8.) - 4.
-    return chars, mel, ids, mel_lens
+
+    if hp.mode in ['teacher_forcing', 'attention_forcing_online']:
+        return chars, mel, ids, mel_lens
+    elif hp.mode == 'attention_forcing_offline':
+        # raise NotImplementedError(f'hp.mode={hp.mode} is not yet implemented')
+        attn_ref = [pad_cut_attn(x[4], max_x_len, max_spec_len//r) for x in batch]
+        attn_ref = np.stack(attn_ref)
+        attn_ref = torch.tensor(attn_ref)
+        return chars, mel, ids, mel_lens, attn_ref
 
 
 class BinnedLengthSampler(Sampler):

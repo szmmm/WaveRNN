@@ -13,6 +13,7 @@ class Paths:
         self.mel = self.data/'mel'
         self.gta = self.data/'gta'
         self.gta_model = self.data/f'gta_{tts_id}'
+        self.attn_model = self.data/f'attn_{tts_id}'
 
         # WaveRNN/Vocoder Paths
         self.voc_checkpoints = self.base/'checkpoints'/f'{voc_id}.wavernn'
@@ -39,12 +40,19 @@ class Paths:
         os.makedirs(self.quant, exist_ok=True)
         os.makedirs(self.mel, exist_ok=True)
         os.makedirs(self.gta, exist_ok=True)
-        os.makedirs(self.voc_checkpoints, exist_ok=True)
-        os.makedirs(self.voc_output, exist_ok=True)
-        os.makedirs(self.tts_checkpoints, exist_ok=True)
-        os.makedirs(self.tts_output, exist_ok=True)
-        os.makedirs(self.tts_attention, exist_ok=True)
-        os.makedirs(self.tts_mel_plot, exist_ok=True)
+
+        from __main__ import hp
+        ignore_voc, ignore_tts = False, False
+        if hasattr(hp, 'ignore_voc'): ignore_voc = hp.ignore_voc
+        if hasattr(hp, 'ignore_tts'): ignore_tts = hp.ignore_tts
+        if not ignore_voc:
+            os.makedirs(self.voc_checkpoints, exist_ok=True)
+            os.makedirs(self.voc_output, exist_ok=True)
+        if not ignore_tts:
+            os.makedirs(self.tts_checkpoints, exist_ok=True)
+            os.makedirs(self.tts_output, exist_ok=True)
+            os.makedirs(self.tts_attention, exist_ok=True)
+            os.makedirs(self.tts_mel_plot, exist_ok=True)
 
     def get_tts_named_weights(self, name):
         """Gets the path for the weights in a named tts checkpoint."""

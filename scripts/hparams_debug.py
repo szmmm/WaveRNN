@@ -7,12 +7,14 @@ data_path = 'data/'
 
 # model ids are separate - that way you can use a new tts with an old wavernn and vice versa
 # NB: expect undefined behaviour if models were trained on different DSP settings
-exp_id = 'debug'
+exp_id = 'debug-asup'
 voc_model_id = exp_id + ''
 tts_model_id = exp_id + ''
 
 # set this to True if you are only interested in WaveRNN
 ignore_tts = False
+# ignore_tts = True
+# ignore_voc = True
 
 
 # DSP --------------------------------------------------------------------------------------------------------------#
@@ -95,6 +97,6 @@ tts_checkpoint_every = 2_000        # checkpoints the model every X steps
 tts_init_weights_path = None # initial weights, usually from a pretrained model
 # TODO: tts_phoneme_prob = 0.0              # [0 <-> 1] probability for feeding model phonemes vrs graphemes
 
-
+mode = 'teacher_forcing'
 # ------------------------------------------------------------------------------------------------------------------#
 

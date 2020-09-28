@@ -102,3 +102,20 @@ def _import_from_file(name, path: Path):
     m = module_from_spec(spec)
     spec.loader.exec_module(m)
     return m
+
+
+def set_global_seeds(i):
+
+    try:
+        import torch
+    except ImportError:
+        pass
+    else:
+        torch.manual_seed(i)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(i)
+
+    import numpy as np
+    np.random.seed(i)
+    import random
+    random.seed(i)

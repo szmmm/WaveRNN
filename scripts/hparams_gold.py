@@ -7,7 +7,7 @@ data_path = 'data/'
 
 # model ids are separate - that way you can use a new tts with an old wavernn and vice versa
 # NB: expect undefined behaviour if models were trained on different DSP settings
-exp_id = 'lj_pretrainGold'
+exp_id = 'lj_gold'
 voc_model_id = exp_id + ''
 tts_model_id = exp_id + ''
 
@@ -95,7 +95,7 @@ tts_checkpoint_every = 2_000        # checkpoints the model every X steps
 tts_init_weights_path = '/home/dawna/tts/qd212/models/WaveRNN/quick_start/tts_weights/latest_weights.pyt' # initial weights, usually from a pretrained model
 # TODO: tts_phoneme_prob = 0.0              # [0 <-> 1] probability for feeding model phonemes vrs graphemes
 
-# mode = 'teacher_forcing'
+mode = 'teacher_forcing'
 
 
 # ------------------------------------------------------------------------------------------------------------------#

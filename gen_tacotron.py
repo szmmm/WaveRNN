@@ -37,6 +37,8 @@ if __name__ == "__main__":
     gl_parser = subparsers.add_parser('griffinlim', aliases=['gl'])
     gl_parser.add_argument('--iters', type=int, default=32, help='[int] number of griffinlim iterations')
 
+    wr_parser.add_argument('--use_standard_names', action='store_true', help='use hp.test_sentences_names to name the generated audio samples')
+
     args = parser.parse_args()
 
     if args.vocoder in ['griffinlim', 'gl']:
@@ -114,7 +116,8 @@ if __name__ == "__main__":
     if input_text:
         inputs = [text_to_sequence(input_text.strip(), hp.tts_cleaner_names)]
     else:
-        with open('sentences.txt') as f:
+        test_sentences_file = hp.test_sentences_file if hasattr(hp, 'test_sentences_file') else 'test_sentences/sentences.txt'
+        with open(test_sentences_file) as f:
             inputs = [text_to_sequence(l.strip(), hp.tts_cleaner_names) for l in f]
 
     if args.vocoder == 'wavernn':
@@ -155,6 +158,8 @@ if __name__ == "__main__":
             save_path = paths.tts_output/f'__input_{input_text[:10]}_{v_type}_{tts_k}k.wav'
         else:
             save_path = paths.tts_output/f'{i}_{v_type}_{tts_k}k.wav'
+        if args.use_standard_names:
+            save_path = paths.tts_output/f'{hp.test_sentences_names[i-1]}.wav'
 
         if save_attn: save_attention(attention, save_path)
 

@@ -7,12 +7,17 @@ data_path = 'data/'
 
 # model ids are separate - that way you can use a new tts with an old wavernn and vice versa
 # NB: expect undefined behaviour if models were trained on different DSP settings
-exp_id = 'lj_pretrainGold'
+tts_batch_size = 64
+exp_id = f'lj_af_online_kl1.0_bs{tts_batch_size}'
 voc_model_id = exp_id + ''
 tts_model_id = exp_id + ''
 
 # set this to True if you are only interested in WaveRNN
 ignore_tts = False
+ignore_voc = True
+
+# random seed
+random_seed = 16
 
 
 # DSP --------------------------------------------------------------------------------------------------------------#
@@ -83,10 +88,15 @@ tts_stop_threshold = -3.4           # Value below which audio generation ends.
 
 # Training
 
-tts_schedule = [(7,  1e-3,  10_000,  32),   # progressive training schedule
-                (5,  1e-4, 20_000,  32),   # (r, lr, step, batch_size)
-                (2,  1e-4, 40_000,  16),
-                (2,  1e-4, 80_000,  8)]
+# tts_schedule = [(7,  1e-3,  10_000,  32),   # progressive training schedule
+#                 (5,  1e-4, 20_000,  32),   # (r, lr, step, batch_size)
+#                 (2,  1e-4, 40_000,  16),
+#                 (2,  1e-4, 80_000,  8)]
+
+tts_schedule = [(2,  1e-3,  10_000,  tts_batch_size),   # progressive training schedule
+                (2,  1e-3, 20_000,  tts_batch_size),   # (r, lr, step, batch_size)
+                (2,  1e-3, 40_000,  tts_batch_size),
+                (2,  1e-4, 80_000,  tts_batch_size)]
 
 tts_max_mel_len = 1250              # if you have a couple of extremely long spectrograms you might want to use this
 tts_bin_lengths = True              # bins the spectrogram lengths before sampling in data loader - speeds up training
@@ -95,7 +105,20 @@ tts_checkpoint_every = 2_000        # checkpoints the model every X steps
 tts_init_weights_path = '/home/dawna/tts/qd212/models/WaveRNN/quick_start/tts_weights/latest_weights.pyt' # initial weights, usually from a pretrained model
 # TODO: tts_phoneme_prob = 0.0              # [0 <-> 1] probability for feeding model phonemes vrs graphemes
 
+mode = 'attention_forcing_online'
 # mode = 'teacher_forcing'
+
+attn_loss_coeff = 1.0
+attn_ref_path = 'attn_lj_gold'
+model_tf_path = tts_init_weights_path
+
+# Test
+test_sentences_file = 'test_sentences/sentences.txt'
+test_sentences_names = ['LJ001-0073', 'LJ010-0294', 'LJ020-0077', 'LJ030-0208', 'LJ040-0113']
+# test_sentences_file = 'test_sentences/sentences_espnet.txt'
+# test_sentences_names = ['LJ050-0029_gen', 'LJ050-0030_gen', 'LJ050-0031_gen', 'LJ050-0032_gen', 'LJ050-0033_gen']
+# test_sentences_file = 'test_sentences/asup.txt'
+# test_sentences_names = ['LJ050-0033_gen']
 
 
 # ------------------------------------------------------------------------------------------------------------------#
