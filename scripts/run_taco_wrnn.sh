@@ -19,6 +19,7 @@ EXP_DIR=/home/dawna/tts/qd212/models/WaveRNN
 cd $EXP_DIR
 
 ### exp
+# ------------------------------------------------- tf
 
 ## default setting: Taco + WRNN
 voc_weights_gold=/home/dawna/tts/qd212/models/WaveRNN/quick_start/voc_weights/latest_weights.pyt
@@ -50,6 +51,12 @@ hp_file=scripts/hparams_initGold.py
 # python gen_tacotron.py --hp_file $hp_file wavernn --voc_weights $voc_weights --unbatched # -i "THAT IS REFLECTED IN DEFINITE AND COMPREHENSIVE OPERATING PROCEDURES."
 # python gen_wavernn.py --hp_file $hp_file -s 3 --unbatched --gta
 
+# gold init / tf big BS
+hp_file=scripts/hparams_initGold_tuneBS.py
+# python train_tacotron.py --hp_file $hp_file
+python gen_tacotron.py --hp_file $hp_file wavernn --voc_weights $voc_weights_gold --batched --use_standard_names
+
+
 ## debug
 hp_file=scripts/hparams_debug.py
 # python train_tacotron.py --hp_file $hp_file
@@ -69,6 +76,8 @@ hp_file=scripts/hparams_debug.py
 hp_file=scripts/hparams_gold.py
 # python train_tacotron.py --hp_file $hp_file --force_attn
 
+# ------------------------------------------------- af
+
 ## gold init, af offline
 hp_file=scripts/hparams_af_offline.py
 # python train_tacotron.py --hp_file $hp_file
@@ -87,11 +96,11 @@ hp_file=scripts/hparams_af_online_kl.py
 # tune gamma
 hp_file=scripts/hparams_af_online_kl_tune.py
 # python train_tacotron.py --hp_file $hp_file
-# python gen_tacotron.py --hp_file $hp_file wavernn --voc_weights $voc_weights_gold --batched # --use_standard_names
+# python gen_tacotron.py --hp_file $hp_file wavernn --voc_weights $voc_weights_gold --batched --use_standard_names
 
 # tune batch size and lr
 hp_file=scripts/hparams_af_online_tuneBS.py
-python train_tacotron.py --hp_file $hp_file
-# python gen_tacotron.py --hp_file $hp_file wavernn --voc_weights $voc_weights_gold --batched # --use_standard_names
+# python train_tacotron.py --hp_file $hp_file
+# python gen_tacotron.py --hp_file $hp_file wavernn --voc_weights $voc_weights_gold --batched --use_standard_names
 
 

@@ -4,6 +4,10 @@ checkpoints/
 model_outputs/
 quick_start/
 
+# grid log
+*.sh.e*
+*.sh.o*
+
 # IDE files
 .idea
 .vscode

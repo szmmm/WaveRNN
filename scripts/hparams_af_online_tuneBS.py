@@ -7,7 +7,7 @@ data_path = 'data/'
 
 # model ids are separate - that way you can use a new tts with an old wavernn and vice versa
 # NB: expect undefined behaviour if models were trained on different DSP settings
-tts_batch_size = 64
+tts_batch_size = 100 # 32 64 100
 exp_id = f'lj_af_online_kl1.0_bs{tts_batch_size}'
 voc_model_id = exp_id + ''
 tts_model_id = exp_id + ''
@@ -113,10 +113,10 @@ attn_ref_path = 'attn_lj_gold'
 model_tf_path = tts_init_weights_path
 
 # Test
-test_sentences_file = 'test_sentences/sentences.txt'
-test_sentences_names = ['LJ001-0073', 'LJ010-0294', 'LJ020-0077', 'LJ030-0208', 'LJ040-0113']
-# test_sentences_file = 'test_sentences/sentences_espnet.txt'
-# test_sentences_names = ['LJ050-0029_gen', 'LJ050-0030_gen', 'LJ050-0031_gen', 'LJ050-0032_gen', 'LJ050-0033_gen']
+# test_sentences_file = 'test_sentences/sentences.txt'
+# test_sentences_names = ['LJ001-0073', 'LJ010-0294', 'LJ020-0077', 'LJ030-0208', 'LJ040-0113']
+test_sentences_file = 'test_sentences/sentences_espnet.txt'
+test_sentences_names = ['LJ050-0029_gen', 'LJ050-0030_gen', 'LJ050-0031_gen', 'LJ050-0032_gen', 'LJ050-0033_gen']
 # test_sentences_file = 'test_sentences/asup.txt'
 # test_sentences_names = ['LJ050-0033_gen']
 

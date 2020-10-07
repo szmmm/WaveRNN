@@ -172,6 +172,7 @@ def tts_train_loop_tf(paths: Paths, model: Tacotron, optimizer, train_set, lr, t
         for i, (x, m, ids, _) in enumerate(train_set, 1):
 
             x, m = x.to(device), m.to(device)
+            # pdb.set_trace()
 
             # Parallelize model onto GPUS using workaround due to python bug
             if device.type == 'cuda' and torch.cuda.device_count() > 1:
