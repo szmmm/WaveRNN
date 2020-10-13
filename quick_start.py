@@ -88,7 +88,7 @@ if __name__ == "__main__":
     if input_text:
         inputs = [text_to_sequence(input_text.strip(), hp.tts_cleaner_names)]
     else:
-        with open('sentences.txt') as f:
+        with open('test_sentences/sentences.txt') as f:
             inputs = [text_to_sequence(l.strip(), hp.tts_cleaner_names) for l in f]
 
     voc_k = voc_model.get_step() // 1000
